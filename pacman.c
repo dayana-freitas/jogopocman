@@ -352,7 +352,7 @@ int main () {
 
     do {
         setbuf(stdin, NULL);
-        printf("\n  escolha uma direção para ir: \n\n  ");
+        printf("\n  escolha uma direção para ir: ");
         scanf("%c",&mover);
         moveper(mapa,mover);
         atualizaMapa(mapa);
