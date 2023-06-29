@@ -163,12 +163,14 @@ void imprimeMapa(int mapa[10][10]) {
             }
             else if (mapa[i][j]==3) {
                 printf("|  "); // verificar
-                printf(RED "%d  "RESET, mapa[i][j]);
+                printf(GRN "%d  "RESET, mapa[i][j]);
             }
             else {
                 printf("|  "); // verificar
-                printf(GRN "%d  "RESET, mapa[i][j]);
-            }       
+                printf(RED "%d  "RESET, mapa[i][j]);
+            }
+            
+                
         }
         printf("|");
     }
@@ -244,24 +246,8 @@ void moveper (int mapa[10][10], char mover) {
         break;
         default:
             printf("  Direção inválida!\n");
+        return;
     }
-
-    // Verificar se saiu do mapa
-    if (xDes >= 0 && xDes < 10 && yDes >= 0 && yDes < 10) {
-        // Verificar se há colisão na posição desejada
-        if (mapa[xDes][yDes] == 3) {
-            printf("um monstro te atacou e você perdeu uma vida");
-        }
-        if(mapa[xDes][yDes] ==4 ) {
-            printf("você ganhou um bônus");
-        }
-        // Mover o personagem para a posição desejada
-        mapa[xDes][yDes] = mapa[xAtu][yAtu];
-        mapa[xAtu][yAtu] = 0;
-    } else {
-        printf("parace que você saiu do mapa :(");
-    }
-    return;
 }
 
 
