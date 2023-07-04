@@ -5,8 +5,20 @@
 #include <string.h>
 #include <conio.h>
 #include <termios.h>
+#include <unistd.h>
 
-//👻 🍒 😶 🍅 🍎 🍇 🫠
+int getch(void) {
+    struct termios oldattr, newattr;
+    int ch;
+    tcgetattr(STDIN_FILENO, &oldattr);
+    newattr = oldattr;
+    newattr.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newattr);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldattr);
+    return ch;
+}
+
 // Função para identificar o sistema operacional e incluir a biblioteca
 #ifdef __linux__
 	#include <unistd.h>
@@ -49,7 +61,7 @@ int randomInteger (int low, int high) {
 
 // Função para gerar o mapa
 void geraMapa(int mapa[10][10], int nivel) {
-    int i, j, qtdO, qtdA, lin, col, infO=5, supO=15, personagem=1;
+    int i, j, qtdO, qtdA, lin, col, infO=5, supO=15;
 
     switch (nivel) {
         case 2: infO=5; supO=25; break;
@@ -62,7 +74,7 @@ void geraMapa(int mapa[10][10], int nivel) {
         for (j=0; j<10; j++)
             mapa[i][j] = 0;
 
-    mapa[randomInteger(0,9)][0]= personagem;
+    mapa[randomInteger(0,9)][0]= 1;
     mapa[randomInteger(0,9)][9]= 2;
     qtdA = randomInteger(3,10);
     qtdO = randomInteger(infO, supO);
@@ -85,7 +97,6 @@ void geraMapa(int mapa[10][10], int nivel) {
         }
     }
 }
-
 
 // Função para atualizar o mapa
 void atualizaMapa(int mapa[10][10]) {
@@ -132,50 +143,36 @@ void atualizaMapa(int mapa[10][10]) {
 // Função para imprimir o mapa
 void imprimeMapa(int mapa[10][10]) {
     int i, j;
-    printf("\n  ---------------------------------------------------------------  ");
+    printf("\n  -------------------------------------------------------------  ");
     for (i=0; i<10; i++) {
-        printf("\n  ---------------------------------------------------------------  \n  ");
+        printf("\n  -------------------------------------------------------------  \n  ");
         for (j=0; j<10; j++) {
             if (mapa[i][j]==0) {
-                printf("|  ");
-                printf("\xF0\x9F\x8C\xBF   ");
+                printf("|  "); // verificar
+                printf(MAG"%d  "RESET, mapa[i][j]);
             }
             else if (mapa[i][j]==1) {
-                printf("|  ");
-                printf("\xF0\x9F\x98\x80   ");
+                printf("|  "); // verificar
+                printf(YEL"%d  "RESET, mapa[i][j]);
             }
             else if (mapa[i][j]==2) {
-                printf("|  ");
-                printf("\xF0\x9F\x8F\x86   ");
+                printf("|  "); // verificar
+                printf(BLU "%d  "RESET, mapa[i][j]);
             }
             else if (mapa[i][j]==3) {
-                printf("|  ");
-                printf("\xF0\x9F\x91\xBB   ");
+                printf("|  "); // verificar
+                printf(RED "%d  "RESET, mapa[i][j]);
             }
             else {
-                printf("|  ");
-                printf("\xF0\x9F\x8D\x8E   ");
+                printf("|  "); // verificar
+                printf(GRN "%d  "RESET, mapa[i][j]);
             }       
         }
         printf("|");
     }
-    printf("\n  ---------------------------------------------------------------  ");
-    printf("\n  ---------------------------------------------------------------  \n  ");
+    printf("\n  -------------------------------------------------------------  ");
+    printf("\n  -------------------------------------------------------------  \n  ");
 }
-
-// Funcionando
-// void imprimeMapa(int mapa[10][10]) {
-//     int i, j;
-//     for (i=0; i<10; i++) {
-//         for (j=0; j<10; j++) {
-//             if (mapa[i][j]==0)
-//                 printf("[ ] ", mapa[i][j]);
-//             else
-//                 printf("[%d] ", mapa[i][j]);
-//         }
-//         printf("\n");
-//     }
-// }
 
 // Função para ler o ranking
 void leRanking(char nomes[3][30], int pontos[3]) {
@@ -229,7 +226,6 @@ void imprimeRanking(char nomes[3][30], int pontos[3]) {
 }
 
 /* Funções Desenvolvidas */
-
 //Função para calcular pontuação de acordo com o tempo
 int calculaPontos(double tempoPassado) {
     int pontuação;
@@ -243,43 +239,6 @@ int calculaPontos(double tempoPassado) {
         pontuação = 40;
     }
     return pontuação;
-}
-
-// Função para não precisar dar enter
-int getch(void) {
-    struct termios oldattr, newattr;
-    int ch;
-    tcgetattr(STDIN_FILENO, &oldattr);
-    newattr = oldattr;
-    newattr.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &newattr);
-    ch = getchar();
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldattr);
-    return ch;
-}
-
-// Função cronômetro
-void cronometro (void) {
-    int segundo = 0;
-    int minuto = 0;
-    int hora = 0;
-    
-    for (int i = 0; i < 5; --i) {
-        printf("\n\n\t\t%dh : %dmin : %dseg", hora, minuto, segundo);
-        sleep(1000);
-        system("CLS"); 
-        segundo++;
-        
-        if (segundo == 60) {
-            segundo = 0;  
-            minuto++;
-        }   
-        
-        if (minuto == 60) {
-            minuto = 0;  
-            hora++;
-        }  
-    }
 }
 
 //Função para mover personagem
@@ -415,11 +374,10 @@ int main () {
         printf("  - A: Move para a esquerda\n");
         printf("  - D: Move para a direita\n\n");
 
-        printf("  Agora que você sabe o que deve fazer, já pode embarcar nessa jornada, mas tome cuidado \n  O caminho para a glória é cheio de recompensas e armadilhas para impedi-lo\n\n\n");
-        printf("  Selecione o nivel de dificuldade:\n  1 - Fácil\n  2 - Moderado\n  3 - Difícil\n");
-          
-        int dif;    
-        scanf("%i", &dif);
+        printf("  Agora que você sabe o que deve fazer, já pode embarcar nessa jornada, mas tome cuidado \n O caminho para a glória é cheio de recompensas e armadilhas para impedi-lo\n\n\n");
+printf("selecione o nivel de dificuldade:\n Fácil - 1\n Moderado - 2\n Difícil - 3\n");
+int dif;
+scanf("%i", &dif);
 
         /* Nova partida (J2)
 
@@ -443,30 +401,55 @@ int main () {
             • Valor 3: posição que contem um obstáculo (evitar);
             • Valor 4: posição de um bônus (coletar).
             Sejam criativos na apresentação do mapa de modo que fique simples de entendê-lo.
-            Logo abaixo do mapa você deve exibir o menu do jogo (J3).
+            Logo abaixo do mapa você deve exibir o menu do jogo (J3).*/
 
-        */
+        
+        //cronometro com pontuação;
+clock_t start, parar;
+    double tempoPassado;
+    int minutos, segundos, pontuação;
 
-        //cronometro();
+    // Iniciar o cronômetro
+    time(&start);
 
-        // Impressão do mapa
-        int mapa[10][10];
-        char mover;
+    
 
-        geraMapa(mapa, dif);
-        imprimeMapa(mapa);
-        setbuf(stdin, NULL);
-        do {
+
+         //Impressão do mapa
+         int mapa[10][10];
+         char mover;
+
+         geraMapa(mapa, dif);
+         imprimeMapa(mapa);
+setbuf(stdin, NULL);
+         do {
          
-            setbuf(stdin, NULL);
-            printf("\n  Para onde deseja se mover? ");
-            mover=getch();
-            moveper(mapa,mover);
-            atualizaMapa(mapa);
-            clear();  
-            imprimeMapa(mapa);}
-            while (mover != 'k');
+             setbuf(stdin, NULL);
+             printf("\n  Para onde deseja se mover? ");
+             
+             
+             mover=getch();
+             moveper(mapa,mover);
+             atualizaMapa(mapa);
+             system("clear");     
+             imprimeMapa(mapa);}
+             while (mover != 'k');
 
+// Parar o cronômetro
+    time(&parar);
+
+    // Calcular o tempo decorrido em segundos
+    tempoPassado = difftime(parar, start);
+    //Calcular pontuação
+    pontuação=calculaPontos(tempoPassado);
+
+    // Converter o tempo decorrido para minutos e segundos
+    minutos = (int)tempoPassado / 60;
+    segundos = (int)tempoPassado % 60;
+
+    
+    printf("Tempo decorrido: %d minutos e %d segundos\n", minutos, segundos);
+    printf("Sua pontuação: %d\n", pontuação);
     /* Menu do Jogo (J3)
 
         O menu do jogo deve trazer, pelo menos, as seguintes opções de operação:
@@ -519,24 +502,24 @@ int main () {
 
     */
 
-        // Ranking
-        // char nomes[3][30];
-        // int pontos[3];
+         //Ranking
+         char nomes[3][30];
+         int pontos[3];
         
-        // leRanking(nomes, pontos);
-        // imprimeRanking(nomes, pontos);
+         leRanking(nomes, pontos);
+         imprimeRanking(nomes, pontos);
         
-        // if (pontos[0] == 0) {
-        //     printf("\nSe nada foi lido, podemos inserir algo e mandar atualizar.");
-        //     strcpy(nomes[0], "Olaf");
-        //     pontos[0] = 1000;
-        //     strcpy(nomes[1], "Olafinho");
-        //     pontos[1] = 500;
-        //     atualizaRanking(nomes, pontos);
-        //     printf("\n\nAgora que gravamos dados, vamos ler e imprimir novamente.\n");
-        //     leRanking(nomes, pontos);
-        //     imprimeRanking(nomes, pontos);
-        // }
+         if (pontos[0] == 0) {
+             printf("\nSe nada foi lido, podemos inserir algo e mandar atualizar.");
+             strcpy(nomes[0], "Olaf");
+             pontos[0] = 1000;
+             strcpy(nomes[1], "Olafinho");
+             pontos[1] = 500;
+             atualizaRanking(nomes, pontos);
+             printf("\n\nAgora que gravamos dados, vamos ler e imprimir novamente.\n");
+             leRanking(nomes, pontos);
+             imprimeRanking(nomes, pontos);
+         }
 
         /* Nova partida (J5)
 
@@ -569,5 +552,4 @@ int main () {
 		}
 		else clear();
     } while (session == 1);
-    return 0;
-}
+    return 0;}

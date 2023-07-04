@@ -3,7 +3,8 @@
 #include <time.h>
 #include <locale.h>
 #include <string.h>
-
+#include <conio.h>
+#include <termios.h>
 
 //👻 🍒 😶 🍅 🍎 🍇 🫠
 // Função para identificar o sistema operacional e incluir a biblioteca
@@ -22,22 +23,6 @@ void clear() {
 	#else
 	#endif
 }
-
-// void sleep() {
-//     int i=0;
-
-//     while (i++ < 10) {
-//         #ifdef _WIN32 || _WIN64
-//         //Sleep(1000); // Sleep 1 segundo
-//         Sleep(1000); // Sleep 0,5 segundo
-//         #elif _WIN32
-//         //sleep(1); // Sleep 1 segundo
-//         usleep(1000*1000);  // Sleep 0,5 segundo (500 milisegundos)
-//         #else
-//         #endif
-//         printf(".");
-//     }
-// }
 
 // Cores
 #define RED "\x1B[31m"
@@ -64,7 +49,7 @@ int randomInteger (int low, int high) {
 
 // Função para gerar o mapa
 void geraMapa(int mapa[10][10], int nivel) {
-    int i, j, qtdO, qtdA, lin, col, infO=5, supO=15;
+    int i, j, qtdO, qtdA, lin, col, infO=5, supO=15, personagem=1;
 
     switch (nivel) {
         case 2: infO=5; supO=25; break;
@@ -77,7 +62,7 @@ void geraMapa(int mapa[10][10], int nivel) {
         for (j=0; j<10; j++)
             mapa[i][j] = 0;
 
-    mapa[randomInteger(0,9)][0]= 1;
+    mapa[randomInteger(0,9)][0]= personagem;
     mapa[randomInteger(0,9)][9]= 2;
     qtdA = randomInteger(3,10);
     qtdO = randomInteger(infO, supO);
@@ -100,6 +85,7 @@ void geraMapa(int mapa[10][10], int nivel) {
         }
     }
 }
+
 
 // Função para atualizar o mapa
 void atualizaMapa(int mapa[10][10]) {
@@ -146,36 +132,50 @@ void atualizaMapa(int mapa[10][10]) {
 // Função para imprimir o mapa
 void imprimeMapa(int mapa[10][10]) {
     int i, j;
-    printf("\n  -------------------------------------------------------------  ");
+    printf("\n  ---------------------------------------------------------------  ");
     for (i=0; i<10; i++) {
-        printf("\n  -------------------------------------------------------------  \n  ");
+        printf("\n  ---------------------------------------------------------------  \n  ");
         for (j=0; j<10; j++) {
             if (mapa[i][j]==0) {
-                printf("|  "); // verificar
-                printf(MAG"%d  "RESET, mapa[i][j]);
+                printf("|  ");
+                printf("\xF0\x9F\x8C\xBF   ");
             }
             else if (mapa[i][j]==1) {
-                printf("|  "); // verificar
-                printf(YEL"%d  "RESET, mapa[i][j]);
+                printf("|  ");
+                printf("\xF0\x9F\x98\x80   ");
             }
             else if (mapa[i][j]==2) {
-                printf("|  "); // verificar
-                printf(BLU "%d  "RESET, mapa[i][j]);
+                printf("|  ");
+                printf("\xF0\x9F\x8F\x86   ");
             }
             else if (mapa[i][j]==3) {
-                printf("|  "); // verificar
-                printf(RED "%d  "RESET, mapa[i][j]);
+                printf("|  ");
+                printf("\xF0\x9F\x91\xBB   ");
             }
             else {
-                printf("|  "); // verificar
-                printf(GRN "%d  "RESET, mapa[i][j]);
+                printf("|  ");
+                printf("\xF0\x9F\x8D\x8E   ");
             }       
         }
         printf("|");
     }
-    printf("\n  -------------------------------------------------------------  ");
-    printf("\n  -------------------------------------------------------------  \n  ");
+    printf("\n  ---------------------------------------------------------------  ");
+    printf("\n  ---------------------------------------------------------------  \n  ");
 }
+
+// Funcionando
+// void imprimeMapa(int mapa[10][10]) {
+//     int i, j;
+//     for (i=0; i<10; i++) {
+//         for (j=0; j<10; j++) {
+//             if (mapa[i][j]==0)
+//                 printf("[ ] ", mapa[i][j]);
+//             else
+//                 printf("[%d] ", mapa[i][j]);
+//         }
+//         printf("\n");
+//     }
+// }
 
 // Função para ler o ranking
 void leRanking(char nomes[3][30], int pontos[3]) {
@@ -229,6 +229,34 @@ void imprimeRanking(char nomes[3][30], int pontos[3]) {
 }
 
 /* Funções Desenvolvidas */
+
+//Função para calcular pontuação de acordo com o tempo
+int calculaPontos(double tempoPassado) {
+    int pontuação;
+    if (tempoPassado <= 60) {
+        pontuação = 100;
+    } else if (tempoPassado <= 120) {
+        pontuação = 80;
+    } else if (tempoPassado <= 180) {
+        pontuação = 60;
+    } else {
+        pontuação = 40;
+    }
+    return pontuação;
+}
+
+// Função para não precisar dar enter
+int getch(void) {
+    struct termios oldattr, newattr;
+    int ch;
+    tcgetattr(STDIN_FILENO, &oldattr);
+    newattr = oldattr;
+    newattr.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newattr);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldattr);
+    return ch;
+}
 
 // Função cronômetro
 void cronometro (void) {
@@ -361,11 +389,37 @@ int main () {
             2. Sair do jogo
 
         */
-    
-    printf("  Em fliperamas muito distantes, existia um ser chamado Pocman que estava cansado de ser apenas o primo distante e queria ganhar reconhecimento\n\n");
-    printf("  Para demonstrar seu valor, decidiu ir atrás da única coisa que sei primo nunca conseguiu alcançar verdadeiramente, o fim do jogo\n\n");
-    printf("  Você deve ajudá-lo a alcançar o fim e demonstrar de uma vez por todas que o verdadeiro caminho não se abre para aqueles que comem comem, e sim para os que lutam\n\n");
-    printf("  Mas tome cuidado, o caminho para a glória é cheio de recompensas e armadilhas para impedi-lo, seja prudente e boa sorte em sua jornada\n\n");
+        clear();
+
+        printf(RED "\n\n  8b,dPPYba,  ,adPPYYba,  ,adPPYba, 88,dPYba,,adPYba,  ,adPPYYba, 8b,dPPYba\n");
+        printf(RED "  88P'    \"8a a8\"     \"\" a8\"     \"\" 88P'   \"88\"    \"8a \"\"     `Y8 88P'   `\"8a\n");
+        printf(RED "  88       d8 8b      8b 8b         88      88      88 ,adPPPPP88 88       88\n");
+        printf(RED "  88b,   ,a8\" \"8a,   ,aa \"8a,   ,aa 88      88      88 88,    ,88 88       88\n");
+        printf(RED "  88`YbbdP\"'   `\"Ybbd8\"   `\"Ybbd8\"' 88      88      88 `\"8bbdP\"Y8 88       88\n");
+        printf(RED "  88\n");
+        printf(RED "  88\n" RESET);
+        printf(YEL "\n  By Dayana Freitas, Cauã Azevedo e Felipe Ribeiro\n\n" RESET);
+
+        printf("  Em fliperamas muito distantes, existia um ser chamado Pocman que estava cansado de ser apenas o primo distante e queria ganhar reconhecimento.\n\n");
+        printf("  Para demonstrar seu valor, decidiu ir atrás da única coisa que seu primo nunca conseguiu alcançar verdadeiramente, o fim do jogo.\n\n");
+        printf("  Sua missão é ajudar o POCMAN a alcançar o fim e mostrar de uma vez por todas que o verdadeiro\n caminho não se abre para aqueles que comem comem, e sim para os que lutam.\n\n\n");
+        
+        printf("  Aqui vai algumas instruções para ajuda-lo nessa jornada:\n\n");
+        printf("  - O objetivo do jogo é pegar o troféu voador\n");
+        printf("  - Ao colidir com as moedas você ganha pontos extras\n");
+        printf("  - Ao colidir com um fantasma você perde uma vida\n");
+        printf("  - Se você sair do mapa, morre imediatamente\n\n");
+        printf("  Para se mover no jogo use os seguintes comandos:\n\n");
+        printf("  - W: Move para cima\n");
+        printf("  - S: Move para baixo\n");
+        printf("  - A: Move para a esquerda\n");
+        printf("  - D: Move para a direita\n\n");
+
+        printf("  Agora que você sabe o que deve fazer, já pode embarcar nessa jornada, mas tome cuidado \n  O caminho para a glória é cheio de recompensas e armadilhas para impedi-lo\n\n\n");
+        printf("  Selecione o nivel de dificuldade:\n  1 - Fácil\n  2 - Moderado\n  3 - Difícil\n");
+          
+        int dif;    
+        scanf("%i", &dif);
 
         /* Nova partida (J2)
 
@@ -392,23 +446,26 @@ int main () {
             Logo abaixo do mapa você deve exibir o menu do jogo (J3).
 
         */
+
         //cronometro();
+
         // Impressão do mapa
-        // int mapa[10][10];
-        // char mover;
+        int mapa[10][10];
+        char mover;
 
-        // geraMapa(mapa, 3);
-        // imprimeMapa(mapa);
-
-        // do {
-        //     setbuf(stdin, NULL);
-        //     printf("\n  Para onde deseja se mover? ");
-        //     scanf("%c",&mover);
-        //     moveper(mapa,mover);
-        //     atualizaMapa(mapa);
-        //     //system("clear");     
-        //     imprimeMapa(mapa);   
-        // } while (mover);
+        geraMapa(mapa, dif);
+        imprimeMapa(mapa);
+        setbuf(stdin, NULL);
+        do {
+         
+            setbuf(stdin, NULL);
+            printf("\n  Para onde deseja se mover? ");
+            mover=getch();
+            moveper(mapa,mover);
+            atualizaMapa(mapa);
+            clear();  
+            imprimeMapa(mapa);}
+            while (mover != 'k');
 
     /* Menu do Jogo (J3)
 
@@ -511,7 +568,6 @@ int main () {
             } 
 		}
 		else clear();
-       
     } while (session == 1);
     return 0;
 }
