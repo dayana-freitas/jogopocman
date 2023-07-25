@@ -3,10 +3,10 @@
 #include <time.h>
 #include <locale.h>
 #include <string.h>
+#include <math.h>
 #include <conio.h>
 #include <termios.h>
 
-//👻 🍒 😶 🍅 🍎 🍇 🫠
 // Função para identificar o sistema operacional e incluir a biblioteca
 #ifdef __linux__
 	#include <unistd.h>
@@ -32,10 +32,14 @@ void clear() {
 #define MAG "\x1B[35m"
 #define CYN "\x1B[36m"
 #define WHT "\x1B[37m"
+#define BOLD "\x1B[1m"
+#define ITALIC "\x1b[3m"
 #define RESET "\x1B[0m"
 
-/* Funções Básicas Disponibilizadas */
+/* Variáveis Globais */
+int vit = 0, vida = 3, bonus = 0;
 
+/* Funções Básicas Disponibilizadas */
 // Gerador de números aleatórios
 int randomInteger (int low, int high) {
     int k;
@@ -125,43 +129,42 @@ void atualizaMapa(int mapa[10][10]) {
                         }
                 }
             }
-       }
+        }
 }
 
 // Função para imprimir o mapa
 void imprimeMapa(int mapa[10][10]) {
     int i, j;
-    printf("\n  -----------------------------------------------------------------------  ");
+    printf(MAG "\n  -------------------------------------------------------------------------------------------  ");
     for (i=0; i<10; i++) {
-        printf("\n  -----------------------------------------------------------------------  \n  ");
+        printf("\n  -------------------------------------------------------------------------------------------  \n  ");
         for (j=0; j<10; j++) {
             if (mapa[i][j]==0) {
-                printf("|  ");
-                printf("\xF0\x9F\x8C\xBF   ");
+                printf("|   ");
+                printf("\xF0\x9F\x8C\xBF    ");
             }
             else if (mapa[i][j]==1) {
-                printf("|  ");
-                printf("\xF0\x9F\x98\x80   ");
+                printf("|   ");
+                printf("\xF0\x9F\x98\x80    ");
             }
             else if (mapa[i][j]==2) {
-                printf("|  ");
-                printf("\xF0\x9F\x8F\x86   ");
+                printf("|   ");
+                printf("\xF0\x9F\x8F\x86    ");
             }
             else if (mapa[i][j]==3) {
-                printf("|  ");
-                printf("\xF0\x9F\x91\xBB   ");
+                printf("|   ");
+                printf("\xF0\x9F\x91\xBB    ");
             }
             else {
-                printf("|  ");
-                printf("\xF0\x9F\x8D\x8E   ");
+                printf("|   ");
+                printf("\xF0\x9F\x8D\x8E    ");
             }       
         }
         printf("|");
     }
-    printf("\n  -----------------------------------------------------------------------  ");
-    printf("\n  -----------------------------------------------------------------------  \n  ");
+    printf("\n  -------------------------------------------------------------------------------------------  ");
+    printf("\n  -------------------------------------------------------------------------------------------  \n  " RESET);
 }
-
 
 // Função para ler o ranking
 void leRanking(char nomes[3][30], int pontos[3]) {
@@ -176,7 +179,7 @@ void leRanking(char nomes[3][30], int pontos[3]) {
         
         fclose(arq);
     } else {
-        printf("\n\nNa primeira vez não há nada a ser lido.");
+        printf("\n\n  Na primeira vez não há nada a ser lido.");
     }
 }
 
@@ -193,38 +196,28 @@ void atualizaRanking(char nomes[3][30], int pontos[3]) {
         
         fclose(arq);
     } else {
-        printf("\nProblemas na gravação.");
+        printf("\n  Problemas na gravação.");
     }
 }
 
 // Função para imprimir o ranking
 void imprimeRanking(char nomes[3][30], int pontos[3]) {
     int i;
-    printf("\nRanking atual:");
+    printf(CYN "\n\n  Ranking atual:" RESET);
     for(i=0; i<3; i++) {
-        printf("\n\t[%d] - %s - Pontos: %d", i+1, nomes[i], pontos[i]);
+        printf(CYN "\n\n  %d° %s - Pontos: %d" RESET, i+1, nomes[i], pontos[i]);
     }
 }
 
 /* Funções Desenvolvidas */
-int Vit = 0, Vida = 3, bonus = 0;
-//Função para calcular pontuação de acordo com o tempo
+
+//Função para calcular pontuação de acordo com o tempo de jogo
 int calculaPontos(double tempoPassado) {
     int pontuacao;
-    if (tempoPassado <= 60) {
-        pontuacao = 1000 + (bonus * 500);
-    } 
-    else if (tempoPassado <= 120) {
-        pontuacao = 800 + (bonus * 500);
-    } 
-    else if (tempoPassado <= 180) {
-        pontuacao = 600 + (bonus * 500);
-    } 
-    else {
-        pontuacao = 400 + (bonus * 500);
-    }
+    pontuacao = round(pow(tempoPassado, -1) * 100000 + (bonus * 500));
     return pontuacao;
 }
+
 
 // Função para não precisar dar enter
 int getch(void) {
@@ -241,6 +234,7 @@ int getch(void) {
 
 void moveper(int mapa[10][10], char mover) {
     int xAtu, yAtu, xDes, yDes;
+    int session = 0, confirmacao;
 
     // Encontrar as coordenadas atuais do personagem
     for (int i = 0; i < 10; i++) {
@@ -253,6 +247,7 @@ void moveper(int mapa[10][10], char mover) {
         }
     }
 
+    int conf;
     // Definir as coordenadas desejadas com base na direção de movimento
     switch (mover) {
         case 's':
@@ -271,6 +266,9 @@ void moveper(int mapa[10][10], char mover) {
             xDes = xAtu;
             yDes = yAtu + 1;
             break;
+        case 'j':
+            printf(RED "\n\n  Você saiu da partida :( " RESET);
+            break;;
         default:
             printf("\n  Direção inválida!\n");
             return;
@@ -278,38 +276,45 @@ void moveper(int mapa[10][10], char mover) {
 
     // Verificar se saiu do mapa
     if (xDes >= 0 && xDes < 10 && yDes >= 0 && yDes < 10) {
+
         // Verificar se há colisão na posição desejada
         if (mapa[xDes][yDes] == 3) {
             mapa[xDes][yDes] = 1;
-             mapa[xAtu][yAtu] = 0;
+            mapa[xAtu][yAtu] = 0;
+            vida--;
             printf(RED "\n  Você atingiu um monstro e perdeu uma vida!" RESET);
-            Vida--; 
-            printf("%i", Vida);
-           return;
+            if (vida == 0)
+            {
+                printf(RED "\n  Você foi de arrasta pra cima :(" RESET);
+            }
+            printf(MAG "\n\n  N° de vidas: %i    Bônus coletados: %i" RESET, vida, bonus); 
+            return;
         }
         else if (mapa[xDes][yDes] == 2) {
-            printf(GRN "\n  Parabéns, você acabou de zerar pocman!" RESET);
-            Vit++;
-            printf("%i", Vit);
+            printf(GRN "\n  Parabéns, você acabou de zerar o pocman!" RESET);
+            printf(MAG "\n\n  N° de vidas: %i    Bônus coletados: %i" RESET, vida, bonus);
+            vit++;
             return;
         }
         else if (mapa[xDes][yDes] == 4) {
             mapa[xDes][yDes] = 1;
             mapa[xAtu][yAtu] = 0;
-            printf(GRN "\n  Parabéns, você acabou de ganhar um bônus!" RESET);
             bonus++;
-            printf("%i", bonus);
-           return;
+            printf(GRN "\n  Parabéns, você acabou de ganhar um bônus!" RESET);
+            printf(MAG "\n\n  N° de vidas: %i    Bônus coletados: %i" RESET, vida, bonus);
+            return;
         }
         // Mover o personagem para a posição desejada
         mapa[xDes][yDes] = mapa[xAtu][yAtu];
         mapa[xAtu][yAtu] = 0;
-    } 
+    }
+
     else {
         printf(RED "\n  GAME OVER, você acabou de sair do mapa :(" RESET);
-        Vida=0;
+        vida=0;
         bonus=0;
     }
+    printf(MAG "\n\n  N° de vidas: %i    Bônus coletados: %i" RESET, vida, bonus);
     return;
 }
 
@@ -331,14 +336,14 @@ int main () {
     do {
         /* Tela Inicial*/
         // Abertura:  Deve conter, no mínimo, o nome do jogo e o nome da equipe desenvolvedora
-        printf(RED "\n\n  8b,dPPYba,  ,adPPYYba,  ,adPPYba, 88,dPYba,,adPYba,  ,adPPYYba, 8b,dPPYba\n");
-        printf(RED "  88P'    \"8a a8\"     \"\" a8\"     \"\" 88P'   \"88\"    \"8a \"\"     `Y8 88P'   `\"8a\n");
-        printf(RED "  88       d8 8b      8b 8b         88      88      88 ,adPPPPP88 88       88\n");
-        printf(RED "  88b,   ,a8\" \"8a,   ,aa \"8a,   ,aa 88      88      88 88,    ,88 88       88\n");
-        printf(RED "  88`YbbdP\"'   `\"Ybbd8\"   `\"Ybbd8\"' 88      88      88 `\"8bbdP\"Y8 88       88\n");
-        printf(RED "  88\n");
-        printf(RED "  88\n" RESET);
-        printf(YEL "\n  By Dayana Freitas, Cauã Azevedo e Felipe Ribeiro\n\n" RESET);
+        printf(BOLD RED "\n\n  8b,dPPYba,  ,adPPYYba,  ,adPPYba, 88,dPYba,,adPYba,  ,adPPYYba, 8b,dPPYba\n");
+        printf("  88P'    \"8a a8\"     \"\" a8\"     \"\" 88P'   \"88\"    \"8a \"\"     `Y8 88P'   `\"8a\n");
+        printf("  88       d8 8b      8b 8b         88      88      88 ,adPPPPP88 88       88\n");
+        printf("  88b,   ,a8\" \"8a,   ,aa \"8a,   ,aa 88      88      88 88,    ,88 88       88\n");
+        printf("  88`YbbdP\"'   `\"Ybbd8\"   `\"Ybbd8\"' 88      88      88 `\"8bbdP\"Y8 88       88\n");
+        printf("  88\n");
+        printf("  88\n" RESET);
+        printf(YEL "\n  By Dayana Freitas, Cauã Azevedo e Felipe Ribeiro\n\n\n" RESET);
                             
         // Codinome - Entre 3 e 15 caracteres
         printf("\n  Bem vindo ao POCMAN, antes de embarcar nessa aventura, insira seu codinome: ");
@@ -363,41 +368,46 @@ int main () {
 
         clear();
 
-        printf(RED "\n\n  8b,dPPYba,  ,adPPYYba,  ,adPPYba, 88,dPYba,,adPYba,  ,adPPYYba, 8b,dPPYba\n");
-        printf(RED "  88P'    \"8a a8\"     \"\" a8\"     \"\" 88P'   \"88\"    \"8a \"\"     `Y8 88P'   `\"8a\n");
-        printf(RED "  88       d8 8b      8b 8b         88      88      88 ,adPPPPP88 88       88\n");
-        printf(RED "  88b,   ,a8\" \"8a,   ,aa \"8a,   ,aa 88      88      88 88,    ,88 88       88\n");
-        printf(RED "  88`YbbdP\"'   `\"Ybbd8\"   `\"Ybbd8\"' 88      88      88 `\"8bbdP\"Y8 88       88\n");
-        printf(RED "  88\n");
-        printf(RED "  88\n" RESET);
-        printf(YEL "\n  By Dayana Freitas, Cauã Azevedo e Felipe Ribeiro\n\n" RESET);
+        printf(BOLD RED "\n\n  8b,dPPYba,  ,adPPYYba,  ,adPPYba, 88,dPYba,,adPYba,  ,adPPYYba, 8b,dPPYba\n");
+        printf(BOLD RED "  88P'    \"8a a8\"     \"\" a8\"     \"\" 88P'   \"88\"    \"8a \"\"     `Y8 88P'   `\"8a\n");
+        printf(BOLD RED "  88       d8 8b      8b 8b         88      88      88 ,adPPPPP88 88       88\n");
+        printf(BOLD RED "  88b,   ,a8\" \"8a,   ,aa \"8a,   ,aa 88      88      88 88,    ,88 88       88\n");
+        printf(BOLD RED "  88`YbbdP\"'   `\"Ybbd8\"   `\"Ybbd8\"' 88      88      88 `\"8bbdP\"Y8 88       88\n");
+        printf(BOLD RED "  88\n");
+        printf(BOLD RED "  88\n" RESET);
+        printf(YEL "\n  By Dayana Freitas, Cauã Azevedo e Felipe Ribeiro\n\n\n" RESET);
 
-        printf("  Em fliperamas muito distantes, existia um ser chamado Pocman que estava cansado de ser apenas o primo distante e queria ganhar reconhecimento.\n\n");
+        printf(ITALIC "  Em fliperamas muito distantes, existia um ser chamado POCMAN que estava cansado de ser apenas o primo distante e queria ganhar reconhecimento.\n\n");
         printf("  Para demonstrar seu valor, decidiu ir atrás da única coisa que seu primo nunca conseguiu alcançar verdadeiramente, o fim do jogo.\n\n");
-        printf("  Sua missão é ajudar o POCMAN a alcançar o fim e mostrar de uma vez por todas que o verdadeiro\n  caminho não se abre para aqueles que comem comem, e sim para os que lutam.\n\n\n");
+        printf("  Sua missão é ajudar o POCMAN a alcançar o fim e mostrar de uma vez por todas que o verdadeiro\n  caminho não se abre para aqueles que comem comem, e sim para os que lutam.\n\n\n" RESET);
         
-        printf("  Aqui vai algumas instruções para ajuda-lo nessa jornada:\n\n");
-        printf("  - O objetivo do jogo é pegar o troféu voador\n");
+        printf(BLU BOLD "  Aqui vai algumas instruções para ajuda-lo nessa jornada:\n\n" RESET);
+        printf(BLU "  - O objetivo do jogo é pegar o troféu voador\n");
         printf("  - Ao colidir com as moedas você ganha pontos extras\n");
         printf("  - Ao colidir com um fantasma você perde uma vida\n");
         printf("  - Se você sair do mapa, morre imediatamente\n\n");
-        printf("  Para se mover no jogo use os seguintes comandos:\n\n");
-        printf("  - W: Move para cima\n");
+        printf(BLU BOLD "  Para se mover no jogo use os seguintes comandos:\n\n" RESET);
+        printf(BLU "  - W: Move para cima\n");
         printf("  - S: Move para baixo\n");
         printf("  - A: Move para a esquerda\n");
         printf("  - D: Move para a direita\n\n");
+        printf("  - J: Para sair da partida\n" RESET);
 
-        printf("  Agora que você sabe o que deve fazer, já pode embarcar nessa jornada, mas tome cuidado \n  O caminho para a glória é cheio de recompensas e armadilhas para impedi-lo\n\n\n");
-        printf("  Selecione o nivel de dificuldade:\n\n  1 - Fácil\n  2 - Moderado\n  3 - Difícil\n  ");
+        printf(ITALIC "  Agora que você sabe o que deve fazer, já pode embarcar nessa jornada, mas tome cuidado \n  O caminho para a glória é cheio de recompensas e armadilhas para impedi-lo\n\n" RESET);
+        printf("  Níveis de dificuldade:\n\n");
+        printf(GRN "  1 - Fácil\n" RESET);
+        printf(YEL "  2 - Moderado\n" RESET);
+        printf(RED "  3 - Difícil\n\n" RESET);
+        printf("  Em qual nível deseja jogar? ");
         scanf("%i", &dif);
 
         // Iniciar o cronômetro
         time(&start);
         
         // Impressão do mapa
-        Vida=3;
+        vida=3;
         bonus=0;   
-        Vit=0;
+        vit=0;
 
         geraMapa(mapa, dif);
         imprimeMapa(mapa);
@@ -405,14 +415,18 @@ int main () {
 
         do {
             setbuf(stdin, NULL);
+            printf(BLU "- W: Move para cima\n");
+            printf("  - S: Move para baixo\n");
+            printf("  - A: Move para a esquerda\n");
+            printf("  - D: Move para a direita\n");
+            printf("  - J: Para sair da partida\n" RESET);
             printf("\n  Para onde deseja se mover? ");
             mover=getch();
-            // moveper(mapa,mover);
             atualizaMapa(mapa);
-            moveper(mapa,mover);
-            //clear();  
+            clear();
+            moveper(mapa, mover);
             imprimeMapa(mapa);
-        } while (Vida>0 && Vit<1);
+        } while (vida>0 && vit<1);
 
         // Parar o cronômetro
         time(&parar);
@@ -420,7 +434,7 @@ int main () {
         // Calcular o tempo decorrido em segundos
         tempoPassado = difftime(parar, start);
         
-        if (Vida==0) {
+        if (vida==0) {
             pontus=0;
         }
 
@@ -433,8 +447,8 @@ int main () {
         minutos = (int)tempoPassado / 60;
         segundos = (int)tempoPassado % 60;
 
-        printf("  Tempo decorrido: %d minutos e %d segundos\n", minutos, segundos);
-        printf("  Sua pontuação: %d\n", pontus);
+        printf(MAG "Tempo: %d minutos e %d segundos\n", minutos, segundos);
+        printf(MAG "  Pontuação: %d\n" RESET, pontus);
         
         // Ranking
         char nomes[3][30];
@@ -444,7 +458,7 @@ int main () {
         //imprimeRanking(nomes, pontos);
         
         if (pontus>pontos[0]) {
-            printf("\n  Parabéns, você é o novo lider do ranking");
+            printf(GRN "\n  Parabéns, você é o novo lider do ranking" RESET);
             strcpy(nomes[1], nomes[0]);
             strcpy(nomes[0], nome);
             pontos[1] = pontos [0];
@@ -457,7 +471,7 @@ int main () {
         }
 
         else if (pontus>pontos[1]) {
-            printf("\n  Parabéns, você é o segundo colocado do ranking");
+            printf(GRN "\n  Parabéns, você é o segundo colocado do ranking" RESET);
             strcpy(nomes[2], nomes[1]);
             strcpy(nomes[1], nome);
             pontos[2] = pontos [1];
@@ -470,7 +484,7 @@ int main () {
         }
 
         else if (pontus>pontos[2]) {
-            printf("\n  Parabéns, você é o terceiro colocado do ranking");
+            printf(GRN "\n  Parabéns, você é o terceiro colocado do ranking" RESET);
             
             strcpy(nomes[2], nome);
             
@@ -483,11 +497,11 @@ int main () {
         }
 
         else { 
-            printf("\n\n  Sua pontação não foi o suficiente para entrar no ranking");
+            printf(RED "\n  Sua pontação não foi o suficiente para entrar no ranking" RESET);
             imprimeRanking(nomes, pontos);
         }
 
-        printf("\n\n  %s deseja iniciar uma nova partida? Digite 1 para jogar novamente ou qualquer outro número para sair do quiz: ", nome);
+        printf("\n\n  %s deseja iniciar uma nova partida? Digite 1 para jogar novamente ou qualquer outro número para sair do jogo: ", nome);
         scanf("%d", &session);
 
         if (session != 1) {
@@ -503,9 +517,7 @@ int main () {
                 clear();
             } 
         }
-
         else clear();        
     } while (session == 1);
- 
     return 0;
 }
